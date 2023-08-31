@@ -1,0 +1,4 @@
+flask==2.3.3
+Flask-WTF==3.0.0
+bcrypt==4.0.1
+qrcode==7.4.2

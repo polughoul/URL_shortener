@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% set page_title = "You can register using the form below"%}
+
+
+{% block title %}
+
+Registration
+
+{% endblock title %}
+
+
+
+
+
+{% block content %}
+
+<form method="POST" action="{{url_for('register')}}">
+    {{form.csrf_token}}
+    Name : {{form.name}} <br>
+    Password : {{form.password}} <br>
+    <input type="submit" value="Sign up">
+</form>
+
+
+
+{% endblock content %}

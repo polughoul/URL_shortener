@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% set page_title = "You can log in here"%}
+
+
+{% block title %}
+
+Log in
+
+{% endblock title %}
+
+{% block content %}
+<h1> </h1>
+
+<form method="POST" action="{{url_for('login')}}">
+    {{form.csrf_token}}
+    Name : {{form.name}} <br>
+    Password : {{form.password}} <br>
+    <input type="submit" value="Log in">
+</form>
+
+
+
+{% endblock content %}

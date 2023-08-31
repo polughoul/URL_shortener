@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}User Links{% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Your Links</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Short Link</th>
+                <th>Full Link</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for link in links %}
+            <tr>
+                <td><a href="{{ url_for('redirect_to_long_url', short_link=link.short) }}">{{ link.short }}</a></td>
+                <td>{{ link.long }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

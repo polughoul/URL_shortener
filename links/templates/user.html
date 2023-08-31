@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% set page_title = "Your links"%}
+
+{% block title %}
+
+Home
+
+{% endblock title %}
+
+
+{% block content %}
+
+<h5> Added links: </h5>
+<ul>
+    {% for link in links %}
+    <li>
+        Long URL: <a href="{{ link.long }}">{{ link.long }}</a><br>
+        Short URL: <a href="{{ link.short }}">{{ link.short }}</a><br>
+        <img src="{{ url_for('qrcodes', filename=link.short + '.png') }}" alt="QR Code">
+        <form method="POST" action="{{ url_for('delete_link', link_id=link.id) }}">
+            {{ form.csrf_token }}
+            <input type="submit" value="Delete">
+        </form>
+        <form method="POST" action="{{ url_for('change_link_name', short_link=link.short) }}">
+            {{ form.csrf_token }}
+            New Name: <input type="text" name="new_name" value="{{ link.short }}">
+            <input type="submit" value="Change Name">
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+<h5> You can add new link using the form below</h5>
+<form method="POST" action="{{url_for('user')}}">
+    {{form.csrf_token}}
+    Link: {{form.link}} <br>
+    <input type="submit" value="Add">
+</form>
+
+
+{% endblock content %}
