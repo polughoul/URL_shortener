@@ -1,3 +1,9 @@
+import sqlite3
+import random
+import string
+import os
+import bcrypt
+import qrcode
 from flask import (
     Flask,
     render_template,
@@ -9,7 +15,7 @@ from flask import (
     request,
 )
 from forms import LoginForm, RegisterForm, LinkForm
-import bcrypt, sqlite3, random, string, qrcode, os
+
 
 app = Flask(__name__)
 app.secret_key = b"nooneknow"
@@ -19,7 +25,9 @@ DATABASE = "links.sqlite"
 
 def get_user_from_db(username):
     user_data = (
-        db().execute("SELECT * FROM users WHERE name = ?", (username,)).fetchone()
+        data_base()
+        .execute("SELECT * FROM users WHERE name = ?", (username,))
+        .fetchone()
     )
     return user_data
 
@@ -31,11 +39,11 @@ def global_vars():
         g.logged = True
 
 
-def db():
-    if not hasattr(g, "db"):
-        g.db = sqlite3.connect(DATABASE)
-        g.db.row_factory = sqlite3.Row
-    return g.db
+def data_base():
+    if not hasattr(g, "data_base"):
+        g.data_base = sqlite3.connect(DATABASE)
+        g.data_base.row_factory = sqlite3.Row
+    return g.data_base
 
 
 def generate_short_url():
@@ -46,31 +54,31 @@ def generate_short_url():
 
 def add_long_url_to_db(long_url, user_id):
     short_url = generate_short_url()
-    db().execute(
+    data_base().execute(
         "INSERT INTO link (user_id, long, short) VALUES (?, ?, ?)",
         (user_id, long_url, short_url),
     )
-    db().commit()
+    data_base().commit()
     return short_url
 
 
 def generate_qr_code(link, filename):
-    qr = qrcode.QRCode(
+    qr_code = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
         box_size=10,
         border=4,
     )
-    qr.add_data(link)
-    qr.make(fit=True)
+    qr_code.add_data(link)
+    qr_code.make(fit=True)
 
-    img = qr.make_image(fill_color="black", back_color="white")
+    img = qr_code.make_image(fill_color="black", back_color="white")
     img.save(filename)
 
 
 def is_name_available(new_name):
     result = (
-        db()
+        data_base()
         .execute("SELECT COUNT(*) FROM link WHERE short = ?", (new_name,))
         .fetchone()
     )
@@ -78,11 +86,11 @@ def is_name_available(new_name):
 
 
 def update_link_name(user_id, old_name, new_name):
-    db().execute(
+    data_base().execute(
         "UPDATE link SET short = ? WHERE user_id = ? AND short = ?",
         (new_name, user_id, old_name),
     )
-    db().commit()
+    data_base().commit()
 
 
 @app.route("/")
@@ -109,11 +117,11 @@ def registerpage():
             salt = bcrypt.gensalt()
             password = form.password.data.encode("utf-8")
             password_hash = bcrypt.hashpw(password, salt)
-            db().execute(
+            data_base().execute(
                 "INSERT INTO users(name, password) VALUES(?, ?)",
                 (username, password_hash),
             )
-            db().commit()
+            data_base().commit()
             flash("You are registered!")
             return redirect("/")
     return render_template("registration.html", form=form)
@@ -141,17 +149,16 @@ def loginpage():
 @app.route("/user", endpoint="user", methods=["GET", "POST"])
 def frontpage_user():
     form = LinkForm()
-    flash_messages = []
     if form.validate_on_submit() and session.get("logged_in"):
         long_url = form.link.data
         user_id = session["user_id"]
         short_url = generate_short_url()
 
-        db().execute(
+        data_base().execute(
             "INSERT INTO link (user_id, long, short) VALUES (?, ?, ?)",
             (user_id, long_url, short_url),
         )
-        db().commit()
+        data_base().commit()
 
         qr_code_filename = f"static/qrcodes/{short_url}.png"
         generate_qr_code(long_url, qr_code_filename)
@@ -162,25 +169,22 @@ def frontpage_user():
     links = []
     if user_id:
         links = (
-            db().execute("SELECT * FROM link WHERE user_id = ?", (user_id,)).fetchall()
+            data_base()
+            .execute("SELECT * FROM link WHERE user_id = ?", (user_id,))
+            .fetchall()
         )
-    else:
-        flash("You are not logged in. Please log in to add links.")
-
     return render_template("user.html", form=form, links=links)
 
 
 @app.route("/<short_link>")
 def redirect_to_long_url(short_link):
     result = (
-        db().execute("SELECT long FROM link WHERE short = ?", (short_link,)).fetchone()
+        data_base()
+        .execute("SELECT long FROM link WHERE short = ?", (short_link,))
+        .fetchone()
     )
-
     if result:
         return redirect(result["long"])
-    else:
-        flash("Short link not found.")
-        return redirect("/user")
 
 
 @app.route("/qrcodes/<filename>", endpoint="qrcodes")
@@ -192,16 +196,16 @@ def serve_qrcode(filename):
 def delete_link(link_id):
     user_id = session.get("user_id")
     link = (
-        db()
+        data_base()
         .execute("SELECT * FROM link WHERE id = ? AND user_id = ?", (link_id, user_id))
         .fetchone()
     )
 
     if not link:
-        flash("Link not found or does not belong to you.")
+        flash("Link not found")
     else:
-        db().execute("DELETE FROM link WHERE id = ?", (link_id,))
-        db().commit()
+        data_base().execute("DELETE FROM link WHERE id = ?", (link_id,))
+        data_base().commit()
         flash("Link deleted successfully.")
 
     return redirect("/user")
@@ -214,7 +218,7 @@ def change_link_name(short_link):
         new_name = request.form.get("new_name")
         if is_name_available(new_name):
             link_data = (
-                db()
+                data_base()
                 .execute(
                     "SELECT * FROM link WHERE user_id = ? AND short = ?",
                     (user_id, short_link),
@@ -236,8 +240,3 @@ def change_link_name(short_link):
             flash("Name is already in use. Please choose another name.")
 
         return redirect("/user")
-
-
-if __name__ == ("__main__"):
-    app.debug = True
-    app.run()
