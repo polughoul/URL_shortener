@@ -15,6 +15,7 @@ from flask import (
     request,
 )
 from forms import LoginForm, RegisterForm, LinkForm
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -153,10 +154,11 @@ def frontpage_user():
         long_url = form.link.data
         user_id = session["user_id"]
         short_url = generate_short_url()
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         data_base().execute(
-            "INSERT INTO link (user_id, long, short) VALUES (?, ?, ?)",
-            (user_id, long_url, short_url),
+            "INSERT INTO link (user_id, long, short, timestamp) VALUES (?, ?, ?, ?)",
+            (user_id, long_url, short_url, timestamp),
         )
         data_base().commit()
 

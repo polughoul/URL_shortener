@@ -17,6 +17,9 @@ Home
     <li>
         Long URL: <a href="{{ link.long }}">{{ link.long }}</a><br>
         Short URL: <a href="{{ link.short }}">{{ link.short }}</a><br>
+        {% if link.timestamp %}
+        Created on: {{ link.timestamp }}<br>
+        {% endif %}
         <img src="{{ url_for('qrcodes', filename=link.short + '.png') }}" alt="QR Code">
         <form method="POST" action="{{ url_for('delete_link', link_id=link.id) }}">
             {{ form.csrf_token }}

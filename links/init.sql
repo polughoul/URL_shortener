@@ -10,5 +10,6 @@ CREATE TABLE link (
     group_id INTEGER,
     long TEXT NOT NULL,
     short TEXT,
+    timestamp TEXT,
     FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE NO ACTION
 );
