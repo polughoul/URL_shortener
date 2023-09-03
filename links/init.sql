@@ -11,5 +11,6 @@ CREATE TABLE link (
     long TEXT NOT NULL,
     short TEXT,
     timestamp TEXT,
+    count_click INTEGER DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE NO ACTION
 );

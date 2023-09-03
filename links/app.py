@@ -158,7 +158,12 @@ def frontpage_user():
 
         data_base().execute(
             "INSERT INTO link (user_id, long, short, timestamp) VALUES (?, ?, ?, ?)",
-            (user_id, long_url, short_url, timestamp),
+            (
+                user_id,
+                long_url,
+                short_url,
+                timestamp,
+            ),
         )
         data_base().commit()
 
@@ -186,6 +191,12 @@ def redirect_to_long_url(short_link):
         .fetchone()
     )
     if result:
+        data_base().execute(
+            "UPDATE link SET count_click = count_click + 1 WHERE short = ?",
+            (short_link,),
+        )
+        data_base().commit()
+
         return redirect(result["long"])
 
 
